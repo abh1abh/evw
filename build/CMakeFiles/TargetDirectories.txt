@@ -1,0 +1,4 @@
+C:/Users/abh/VS Code/evw/build/CMakeFiles/evw_lib.dir
+C:/Users/abh/VS Code/evw/build/CMakeFiles/evw.dir
+C:/Users/abh/VS Code/evw/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/abh/VS Code/evw/build/CMakeFiles/ZERO_CHECK.dir
