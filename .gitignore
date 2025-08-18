@@ -2,3 +2,5 @@
 build/
 
 .venv/
+
+backend/src/__pycache__/
