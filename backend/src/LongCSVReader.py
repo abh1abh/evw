@@ -7,7 +7,7 @@ class LongCSVReader:
     def __init__(self, infer_schema_length: int = 2000) -> None:
         self.infer_schema_length = infer_schema_length
 
-    def read_wide(self, csv_path: str) -> pl.DataFrame:
+    def read_to_df(self, csv_path: str) -> pl.DataFrame:
         df_long = pl.read_csv(csv_path, infer_schema_length=self.infer_schema_length).drop_nulls()
         for col in self.REQUIRED_COLS:
             if col not in df_long.columns:
