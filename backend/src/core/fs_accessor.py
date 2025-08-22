@@ -41,3 +41,10 @@ class FSAccessor:
         if len(vals) < 2:
             raise ValueError(f"Need at least two periods for average. Got: {vals.to_dict()}")
         return float(vals.iloc[0]), float(vals.iloc[1])
+    
+    def latest(self, row: pd.Series) -> Tuple[float, float]:
+        # Ensure we have at least 2 columns
+        vals = row.dropna().astype(float)
+        if len(vals) < 1:
+            raise ValueError(f"Need at least two periods for average. Got: {vals.to_dict()}")
+        return float(vals.iloc[0])

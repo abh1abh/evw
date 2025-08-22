@@ -1,58 +1,60 @@
 from __future__ import annotations
 import argparse
-import json
 from pathlib import Path
 import yfinance as yf
-from roe import Roe
-from roa import Roa
-from margins import Margin
+from ratios import Efficiency, Growth, Leverage, Liquidity, Profitability
+from valuation import Valuation
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--ticker", required=True, help="Path to CSV: Year,Metric,Value")
-    # parser.add_argument("-o", "--output_path", required=True, help="Output path")
-    # parser.add_argument("--wacc", type=float, default=0.08)
-    # parser.add_argument("--ltg", type=float, default=0.025)
-    # parser.add_argument("--midyear", action="store_true", default=True)
-    # parser.add_argument("--no-midyear", dest="midyear", action="store_false")
-    # parser.add_argument("--horizon", type=int, default=5)
-    # parser.add_argument("--net-debt", type=float, default=None)
+ 
     args = parser.parse_args()
     
     ticker = yf.Ticker(args.ticker)
 
-    # print(ticker.financials)
+    # print("Income:\n",ticker.financials.index)
+    # print("Balance:\n",ticker.balance_sheet.index)
+
+    profitability = Profitability(ticker)
+    print("\nProfitability: ")
+    print(f"Return on Equity:       {profitability.roe()}")
+    print(f"Return on Assets:       {profitability.roa()}")
+    print(f"Gross Margin:           {profitability.gross_profit_margin()}")
+    print(f"Operating Margin:       {profitability.operating_margin()}")
+    print(f"Net Income Margin:      {profitability.net_margin()}")
+    print(f"EBITDA Margin:          {profitability.ebitda_margin()}")
     
-    roe = Roe(ticker=ticker).calc_roe()   
+    leverage = Leverage(ticker=ticker)
+    print("\nLeverage: ")
+    print(f"Debt to Equity:         {leverage.debt_to_equity()}")
+    print(f"Debt ratio:             {leverage.debt_ratio()}")
+    print(f"Equity ratio:           {leverage.equity_ratio()}")
+    print(f"Interest Coverage:      {leverage.interest_coverage()}")
 
-    print("ROE: ", roe)
+    efficiency = Efficiency(ticker=ticker)
+    print("\nEfficiency: ")
+    print(f"Asset Turnover:         {efficiency.asset_turnover()}")
+    print(f"Inventory Turnover:     {efficiency.inventory_turnover()}")
+    print(f"Receivables Turnover:   {efficiency.receivables_turnover()}")
 
-    roa = Roa(ticker=ticker).calc_roa()
+    growth = Growth(ticker=ticker)
+    print("\nGrowth: ")
+    print(f"Revenue Growth:         {growth.revenue_growth()}")
+    print(f"Net Income Growth:      {growth.net_income_growth()}")
+    print(f"EPS Growth:             {growth.eps_growth()}")
 
-    print("ROA: ", roa)
+    liquidity = Liquidity(ticker)
+    print("\nLiquidity:")
+    print(f"Current Ratio:          {liquidity.current_ratio()}")
+    print(f"Quick Ratio:            {liquidity.quick_ratio()}")
 
-
-    margin = Margin(ticker=ticker)
-    print("Margins: ")
-    print("Gross ", margin.calc_gross_profit_margin())
-    print("Operating ", margin.calc_operating_margin())
-    print("Net ", margin.calc_net_margin())
-    print("EBITDA ", margin.calc_ebitda_margin())
-
-    
-    # out = Path(args.output_path)
-    # out.mkdir(parents=True, exist_ok=True)
-
-    # reader = LongCSVReader()
-    # df = reader.read_to_df(args.input)
-    # print(df)
-    # reader.write_csv(df, str(out / "wide_financials.csv"))
-
-
-    # fcff_builder = FCFFBuilder()
-    # fcff_df = fcff_builder.compute_fcff(df)
-    # fcff_df.select(["Year","NOPAT","DA","CapexOut","DeltaNWC","FCFF"]).write_csv(out / "fcff_components.csv")
-
+    valuation = Valuation(ticker)
+    print("\Valuation: ")
+    print(f"P/E Ratio:              {valuation.pe_ratio()}")
+    print(f"P/B Ratio:              {valuation.pb_ratio()}")
+    print(f"EV/EBITDA Ratio:        {valuation.ev_ebitda()}")
 
 if __name__ == "__main__":
     main()
