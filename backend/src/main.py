@@ -1,7 +1,6 @@
-from __future__ import annotations
 import argparse
-from pathlib import Path
 import yfinance as yf
+
 from ratios import Efficiency, Growth, Leverage, Liquidity, Profitability
 from valuation import Valuation
 
