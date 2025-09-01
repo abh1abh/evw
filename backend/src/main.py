@@ -1,7 +1,6 @@
 import argparse
 import yfinance as yf
 import logging
-import os
 
 from ratios import Efficiency, Growth, Leverage, Liquidity, Profitability
 from valuation import Valuation, WACCCalculator
@@ -9,8 +8,7 @@ from valuation import Valuation, WACCCalculator
 
 def main():
     # --- Setup Logging ---
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s') 
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--ticker", required=True, help="Stock ticker symbol (e.g., AAPL)")
     parser.add_argument("--wacc", type=float, help="Directly input WACC, overriding calculation.")
@@ -80,6 +78,7 @@ def main():
         print_metric("Cost of Debt", wacc_calculator.cost_of_debt())
         print_metric("Effective Tax Rate", wacc_calculator.effective_tax_rate())
         print_metric("WACC (calculated)", wacc)
+    
     
 if __name__ == "__main__":
     main()

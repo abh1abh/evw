@@ -100,3 +100,5 @@ class Valuation:
             logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate EV/EBITDA Ratio due to insufficient data: {e}")
             return None
         
+    def dcf(self, discount_rate):
+        return

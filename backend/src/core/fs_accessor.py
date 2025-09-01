@@ -1,5 +1,5 @@
 import yfinance as yf
-from functools import lru_cache, reduce, cached_property
+from functools import reduce, cached_property
 import pandas as pd
 from typing import Iterable, Tuple
 from dataclasses import dataclass
