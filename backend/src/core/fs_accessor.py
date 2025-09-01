@@ -87,12 +87,17 @@ class FSAccessor:
         },
         "Depreciation And Amortization": {
             "statement": "income",
-            "primary_keys": ["Depreciation And Amortization"],
+            "primary_keys": ["Depreciation And Amortization", "Reconciled Depreciation"],
             "derivation": None,
         },
         "Diluted EPS": {
             "statement": "income",
             "primary_keys": ["Diluted EPS", "Basic EPS"],
+            "derivation": None,
+        },
+        "Tax Rate For Calcs": {
+            "statement": "income",
+            "primary_keys": ["Tax Rate For Calcs"],
             "derivation": None,
         },
         # Balance Sheet Metrics
@@ -151,9 +156,16 @@ class FSAccessor:
         },
         "Short Term Debt": {
             "statement": "balance",
-            "primary_keys": ["Short Term Debt"],
+            "primary_keys": [
+                "Short Term Debt",
+                "Current Debt",
+                "Current Debt And Capital Lease Obligation",
+                "Other Current Borrowings",
+                "Commercial Paper",
+            ],
             "derivation": None,
         },
+
         "Long Term Debt": {
             "statement": "balance",
             "primary_keys": ["Long Term Debt"],
@@ -163,6 +175,16 @@ class FSAccessor:
             "statement": "balance",
             "primary_keys": ["Cash And Cash Equivalents", "Cash"],
             "derivation": None,
+        },
+        "Net PPE": {
+            "statement": "balance",
+            "primary_keys": ["Net PPE"],
+            # Optional: derive if Net PPE missing
+            # Net PPE = Gross PPE - Accumulated Depreciation
+            "derivation": {
+                "operator": "subtract",
+                "operands": ["Gross PPE", "Accumulated Depreciation"],
+            },
         },
     }
 

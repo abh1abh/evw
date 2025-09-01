@@ -14,13 +14,18 @@ def main():
     parser.add_argument("--wacc", type=float, help="Directly input WACC, overriding calculation.")
     parser.add_argument("--risk-free-rate", default=0.04, type=float, help="Risk-free rate for CAPM.")
     parser.add_argument("--equity-risk-premium", default=0.05, type=float, help="Equity risk premium for CAPM.")
+    parser.add_argument("--dcf", action="store_true")
  
     args = parser.parse_args()
+    print("DCF: ",args.dcf)
     
     risk_free_rate = args.risk_free_rate
     equity_risk_premium = args.equity_risk_premium 
 
     ticker = yf.Ticker(args.ticker)
+    # print(ticker.financials.index)
+    # print(ticker.balance_sheet.index)
+
 
     def print_metric(name, value):
         print(f"{name:<25} {f'{value:.4f}' if value is not None else 'Not Available'}")
@@ -78,8 +83,10 @@ def main():
         print_metric("Cost of Debt", wacc_calculator.cost_of_debt())
         print_metric("Effective Tax Rate", wacc_calculator.effective_tax_rate())
         print_metric("WACC (calculated)", wacc)
-    
-    
+
+        if(args.dcf):
+            print("FCFF:\n", valuation.dcf())    
+
 if __name__ == "__main__":
     main()
     print("Done")
