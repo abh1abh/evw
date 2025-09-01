@@ -17,45 +17,59 @@ class Efficiency:
     def __init__(self, ticker: yf.Ticker):
         self.fs = FSAccessor(ticker)
 
-    def _get_revenue_rows(self):
-        return self.fs.get_row(self.fs.income, ["Total Revenue"])
-        
     def asset_turnover(self) -> float | None:
+        revenue_series = self.fs.get_metric("Total Revenue")
+        assets_series = self.fs.get_metric("Total Assets")
+
+        if revenue_series is None or assets_series is None:
+            return None # FSAccessor already logged the reason.
+
         try:
-            total_revenue = self.fs.latest(self._get_revenue_rows())
-            total_assets_rows = self.fs.get_row(self.fs.balance, ["Total Assets"])
-            curr_assets, prev_assets = self.fs.latest_and_prev(total_assets_rows)
+            total_revenue = self.fs.latest(revenue_series)
+            curr_assets, prev_assets = self.fs.latest_and_prev(assets_series)
+            
             avg_assets = (curr_assets + prev_assets) / 2
             if avg_assets == 0:
                 return 0.0
             return total_revenue / avg_assets
-        except Exception:
-            logging.exception("Failed to Calculate Asset Turnover")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Asset Turnover due to insufficient data: {e}")
             return None
     
     def inventory_turnover(self) -> float | None:
+        cogs_series = self.fs.get_metric("Cost Of Revenue") 
+        inventory_series = self.fs.get_metric("Inventory")
+
+        if cogs_series is None or inventory_series is None:
+            return None
+
         try:
-            cost_of_revenue_rows = self.fs.get_row(self.fs.income, ["Cost Of Revenue"]) 
-            cost_of_revenue = self.fs.latest(cost_of_revenue_rows)
-            inventory_rows = self.fs.get_row(self.fs.balance, ["Inventory"])
-            curr_inventory, prev_inventory = self.fs.latest_and_prev(inventory_rows)
+            cost_of_revenue = self.fs.latest(cogs_series)
+            curr_inventory, prev_inventory = self.fs.latest_and_prev(inventory_series)
+
             avg_inventory = (curr_inventory + prev_inventory) / 2
             if avg_inventory == 0:
                 return 0.0
             return cost_of_revenue / avg_inventory
-        except Exception:
-            logging.exception("Failed to Calculate Inventory Turnover")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Inventory Turnover due to insufficient data: {e}")
             return None
 
     def receivables_turnover(self) -> float | None:
+        revenue_series = self.fs.get_metric("Total Revenue")
+        ar_series = self.fs.get_metric("Accounts Receivable")
+
+        if revenue_series is None or ar_series is None:
+            return None
+
         try:
-            total_revenue = self.fs.latest(self._get_revenue_rows())
-            ar_rows = self.fs.get_row(self.fs.balance, ["Accounts Receivable"])
-            curr_ar, prev_ar = self.fs.latest_and_prev(ar_rows)
+            total_revenue = self.fs.latest(revenue_series)
+            curr_ar, prev_ar = self.fs.latest_and_prev(ar_series)
+            
             avg_ar = (curr_ar + prev_ar) / 2
             if avg_ar == 0:
                 return 0.0
             return total_revenue / avg_ar
-        except Exception:
-            logging.exception("Failed to Calculate Receivables Turnover")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Receivables Turnover due to insufficient data: {e}")
             return None

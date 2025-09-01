@@ -6,81 +6,106 @@ class Profitability:
     def __init__(self, ticker: yf.Ticker):
         self.fs = FSAccessor(ticker)
 
-    def _revenue(self):
-        rev_row = self.fs.get_row(self.fs.income, ["Total Revenue", "Operating Revenue"])
-        rev = self.fs.latest(rev_row)
-        if rev == 0:
-            raise ValueError("Revenue is zero.")
-        return rev
-    
     def net_margin(self) -> float | None:
+        ni_series = self.fs.get_metric("Net Income")
+        revenue_series = self.fs.get_metric("Total Revenue")
+
+        if ni_series is None or revenue_series is None:
+            return None
+
         try:
-            net_income_row = self.fs.get_row(self.fs.income, ["Net Income", "Net Income Common Stockholders"])
-            ni = self.fs.latest(net_income_row)
-            rev = self._revenue()
+            ni = self.fs.latest(ni_series)
+            rev = self.fs.latest(revenue_series)
+            if rev == 0:
+                return 0.0
             return ni / rev
-        except Exception:
-            logging.exception("Failed to compute Net Margin")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Net Margin due to insufficient data: {e}")
             return None
         
     def gross_profit_margin(self) -> float | None:
+        gp_series = self.fs.get_metric("Gross Profit")
+        revenue_series = self.fs.get_metric("Total Revenue")
+
+        if gp_series is None or revenue_series is None:
+            return None
+
         try:
-            gp_row = self.fs.get_row(self.fs.income, ["Gross Profit"])
-            gp = self.fs.latest(gp_row)
-            rev = self._revenue()
+            gp = self.fs.latest(gp_series)
+            rev = self.fs.latest(revenue_series)
+            if rev == 0:
+                return 0.0
             return gp / rev
-        except Exception:
-            logging.exception("Failed to compute Gross Margin")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Gross Profit Margin due to insufficient data: {e}")
             return None
     
     def operating_margin(self) -> float | None:
+        op_income_series = self.fs.get_metric("Operating Income")
+        revenue_series = self.fs.get_metric("Total Revenue")
+
+        if op_income_series is None or revenue_series is None:
+            return None
+
         try:
-            op_row = self.fs.get_row(self.fs.income, ["Operating Income", "Total Operating Income As Reported"])
-            op  = self.fs.latest(op_row)
-            rev = self._revenue()
-            return op / rev
-        except Exception:
-            logging.exception("Failed to compute Operating Margin")
+            op_income = self.fs.latest(op_income_series)
+            rev = self.fs.latest(revenue_series)
+            if rev == 0:
+                return 0.0
+            return op_income / rev
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Operating Margin due to insufficient data: {e}")
             return None
         
     def ebitda_margin(self) -> float | None:
+        ebitda_series = self.fs.get_metric("EBITDA")
+        revenue_series = self.fs.get_metric("Total Revenue")
+
+        if ebitda_series is None or revenue_series is None:
+            return None
+
         try:
-            ebitda_row = self.fs.get_row(self.fs.income, ["EBITDA", "Normalized EBITDA"])
-            ebitda = self.fs.latest(ebitda_row)
-            rev = self._revenue()
+            ebitda = self.fs.latest(ebitda_series)
+            rev = self.fs.latest(revenue_series)
+            if rev == 0:
+                return 0.0
             return ebitda / rev
-        except Exception:
-            logging.exception("Failed to compute EBITDA Margin")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate EBITDA Margin due to insufficient data: {e}")
             return None
 
     def roa(self) -> float | None:
-        try:
-            net_income_rows = self.fs.get_row(self.fs.income, ["Net Income"])
-            ni = self.fs.latest(net_income_rows)
+        ni_series = self.fs.get_metric("Net Income")
+        assets_series = self.fs.get_metric("Total Assets")
 
-            total_assets_rows = self.fs.get_row(self.fs.balance, ["Total Assets"])
-            curr_assets, prev_assets = self.fs.latest_and_prev(total_assets_rows)
+        if ni_series is None or assets_series is None:
+            return None
+
+        try:
+            ni = self.fs.latest(ni_series)
+            curr_assets, prev_assets = self.fs.latest_and_prev(assets_series)
             avg_assets = (curr_assets + prev_assets) / 2
             if avg_assets == 0:
                 return 0.0
             return ni / avg_assets
-        except Exception:
-            logging.exception("Failed to compute ROA")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate ROA due to insufficient data: {e}")
             return None
         
     def roe(self) -> float | None:
+        ni_series = self.fs.get_metric("Net Income")
+        equity_series = self.fs.get_metric("Stockholders Equity")
+
+        if ni_series is None or equity_series is None:
+            return None
+
         try:
-            net_income_row = self.fs.get_row(self.fs.income, ["Net Income", "Net Income Common Stockholders"])
-            ni, _ = self.fs.latest_and_prev(net_income_row)
-            equity_row = self.fs.get_row(
-                self.fs.balance,
-                ["Common Stock Equity", "Stockholders Equity", "Total Stockholder Equity"]
-            )
-            eq_curr, eq_prev = self.fs.latest_and_prev(equity_row)
+            ni = self.fs.latest(ni_series)
+            eq_curr, eq_prev = self.fs.latest_and_prev(equity_series)
             avg_eq = (eq_curr + eq_prev) / 2.0
             if avg_eq == 0:
                 return 0.0
             return ni / avg_eq
-        except Exception:
-            logging.exception("Failed to compute ROE")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate ROE due to insufficient data: {e}")
             return None

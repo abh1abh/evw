@@ -18,35 +18,44 @@ class Growth:
         self.fs = FSAccessor(ticker)
 
     def revenue_growth(self) -> float | None:
+        revenue_series = self.fs.get_metric("Total Revenue")
+        if revenue_series is None:
+            return None
+
         try:
-            revenue_rows = self.fs.get_row(self.fs.income, ["Total Revenue"])
-            curr_revenue, prev_revenue = self.fs.latest_and_prev(revenue_rows)
+            curr_revenue, prev_revenue = self.fs.latest_and_prev(revenue_series)
             if prev_revenue == 0:
                 return 0.0
             return (curr_revenue - prev_revenue) / prev_revenue
-        except Exception:
-            logging.exception("Error Calculating Revenue Growth")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Revenue Growth due to insufficient data: {e}")
             return None
         
     def net_income_growth(self) -> float | None:
+        ni_series = self.fs.get_metric("Net Income")
+        if ni_series is None:
+            return None
+
         try:
-            ni_rows = self.fs.get_row(self.fs.income, ["Net Income"])
-            curr_ni, prev_ni = self.fs.latest_and_prev(ni_rows)
+            curr_ni, prev_ni = self.fs.latest_and_prev(ni_series)
             if prev_ni == 0:
                 return 0.0
             return (curr_ni - prev_ni) / prev_ni
-        except Exception:
-            logging.exception("Error Calculating Net Income Growth")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Net Income Growth due to insufficient data: {e}")
             return None
     
     def eps_growth(self) -> float | None:
+        eps_series = self.fs.get_metric("Diluted EPS")
+        if eps_series is None:
+            return None
+
         try:
-            eps_rows = self.fs.get_row(self.fs.income, ["Diluted EPS", "Basic EPS"])
-            curr_eps, prev_eps = self.fs.latest_and_prev(eps_rows)
-            if prev_eps is None or prev_eps <= 0:
-                return None
+            curr_eps, prev_eps = self.fs.latest_and_prev(eps_series)
+            if prev_eps is None or prev_eps == 0:
+                return 0.0
             return (curr_eps - prev_eps) / prev_eps
-        except Exception:
-            logging.exception("Error Calculating Earning Per Share Growth")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate EPS Growth due to insufficient data: {e}")
             return None
         

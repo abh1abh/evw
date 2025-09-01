@@ -17,35 +17,39 @@ class Liquidity:
     def __init__(self, ticker: yf.Ticker):
         self.fs = FSAccessor(ticker)
 
-    def _get_assets(self):
-        return self.fs.latest(self.fs.get_row(self.fs.balance, ["Current Assets"]))
-
-    def _get_liabilities(self):
-        return self.fs.latest(self.fs.get_row(self.fs.balance, ["Current Liabilities"]))
-    
-    def _get_inventory(self):
-        return self.fs.latest(self.fs.get_row(self.fs.balance, ["Inventory"]))
-
     def current_ratio(self) -> float | None:
+        assets_series = self.fs.get_metric("Current Assets")
+        liabilities_series = self.fs.get_metric("Current Liabilities")
+
+        if assets_series is None or liabilities_series is None:
+            return None
+
         try:
-            assets = self._get_assets()
-            liabilities = self._get_liabilities()
+            assets = self.fs.latest(assets_series)
+            liabilities = self.fs.latest(liabilities_series)
             if liabilities == 0:
                 return 0.0
             return assets / liabilities
-        except Exception:
-            logging.exception("Error Calculating Current ratio")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Current Ratio due to insufficient data: {e}")
             return None
         
     def quick_ratio(self) -> float | None:
+        assets_series = self.fs.get_metric("Current Assets")
+        liabilities_series = self.fs.get_metric("Current Liabilities")
+        inventory_series = self.fs.get_metric("Inventory")
+
+        if assets_series is None or liabilities_series is None or inventory_series is None:
+            return None
+
         try:
-            assets = self._get_assets()
-            liabilities = self._get_liabilities()
-            inventory = self._get_inventory()
+            assets = self.fs.latest(assets_series)
+            liabilities = self.fs.latest(liabilities_series)
+            inventory = self.fs.latest(inventory_series)
             if liabilities == 0:
                 return 0.0
             return (assets - inventory) / liabilities
-        except Exception:
-            logging.exception("Error Calculating Quick ratio")
+        except ValueError as e:
+            logging.warning(f"For ticker {self.fs.ticker.ticker}, could not calculate Quick Ratio due to insufficient data: {e}")
             return None
         
