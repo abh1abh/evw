@@ -1,4 +1,6 @@
 from core import yf, FSAccessor
+import logging
+
 """
 Valuation Ratios (if you include stock price data)
 
@@ -17,59 +19,64 @@ class Valuation:
         self.fs = FSAccessor(ticker)
         self.ticker = ticker
 
-    def price_per_share(self) -> float:
+    def price_per_share(self) -> float | None:
         try:
             return self.ticker.history(period="1d")["Close"].iloc[-1]
-        except Exception as e:
-            raise RuntimeError("Error fetching Price per Share")
+        except Exception:
+            logging.exception("Error fetching Price per Share")
+            return None
 
-    def book_value_per_share(self) -> float:
+    def book_value_per_share(self) -> float | None:
         try:
             equity = self.fs.latest(self.fs.get_row(self.fs.balance, ["Common Stock Equity"]))
             shares = self.ticker.info.get("sharesOutstanding")
-            if not shares:
-                raise ValueError("No Outstanding Shares")
+            if not shares or shares == 0:
+                return None
             return equity / shares
-        except Exception as e:
-            raise RuntimeError("Error Calculating Book Value per Share")
+        except Exception:
+            logging.exception("Error Calculating Book Value per Share")
+            return None
 
-    def enterprise_value(self) -> float:
+    def enterprise_value(self) -> float | None:
         try:
             market_cap = self.ticker.info.get("marketCap")
             debt = self.fs.latest(self.fs.get_row(self.fs.balance, ["Total Debt"]))
             cash = self.fs.latest(self.fs.get_row(self.fs.balance, ["Cash And Cash Equivalents"]))
             return market_cap + debt - cash
+        except Exception:
+            logging.exception("Error calculating Enterprise value")
+            return None
 
-        except Exception as e:
-            raise RuntimeError("Error Enterprise value")
-
-    def pe_ratio(self) -> float:
+    def pe_ratio(self) -> float | None:
         try:
             price = self.price_per_share()
             eps = self.fs.latest(self.fs.get_row(self.fs.income, ["Diluted EPS"]))
-            if eps <= 0:
-                raise ValueError("EPS is zero or negative; P/E ratio not meaningful.")
+            if price is None or eps is None or eps <= 0:
+                return None
             return price / eps
-        except Exception as e:
-            raise RuntimeError(f"Error Calculating P/E ratio: {e}") from e
+        except Exception:
+            logging.exception("Error Calculating P/E ratio")
+            return None
     
-    def pb_ratio(self) -> float:
+    def pb_ratio(self) -> float | None:
         try:
             price = self.price_per_share()
             bvps = self.book_value_per_share()
-            if bvps <= 0:
-                raise ValueError("Book Value per Share is zero or negative; P/B ratio not meaningful.")
+            if price is None or bvps is None or bvps <= 0:
+                return None
             return price / bvps
-        except Exception as e:
-            raise RuntimeError(f"Error Calculating P/B ratio {e}") from e
+        except Exception:
+            logging.exception("Error Calculating P/B ratio")
+            return None
 
-    def ev_ebitda(self) -> float:
+    def ev_ebitda(self) -> float | None:
         try:
             enterprise_value = self.enterprise_value()
             ebitda = self.fs.latest(self.fs.get_row(self.fs.income, ["EBITDA"]))
-            if ebitda < 0 and ebitda:
-                raise ValueError("EBITDA is zero or negative; EV/EBITDA ratio not meaningful.")
+            if enterprise_value is None or ebitda is None or ebitda <= 0:
+                return None
             return enterprise_value / ebitda
-        except Exception as e:
-            raise RuntimeError(f"Error Calculating P/B ratio {e}") from e
+        except Exception:
+            logging.exception("Error Calculating EV/EBITDA ratio")
+            return None
         

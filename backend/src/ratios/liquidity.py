@@ -1,4 +1,5 @@
 from core import yf, FSAccessor
+import logging
 
 """
 Liquidity Ratios
@@ -25,26 +26,26 @@ class Liquidity:
     def _get_inventory(self):
         return self.fs.latest(self.fs.get_row(self.fs.balance, ["Inventory"]))
 
-    
-    def current_ratio(self) -> float:
+    def current_ratio(self) -> float | None:
         try:
             assets = self._get_assets()
             liabilities = self._get_liabilities()
             if liabilities == 0:
-                raise ValueError("Current Liabilities is zero; ratio undefined.")
+                return 0.0
             return assets / liabilities
+        except Exception:
+            logging.exception("Error Calculating Current ratio")
+            return None
         
-        except Exception as e:
-            raise RuntimeError(f"Error Calculating Current ratio: {e}")
-        
-    def quick_ratio(self) -> float:
+    def quick_ratio(self) -> float | None:
         try:
             assets = self._get_assets()
             liabilities = self._get_liabilities()
             inventory = self._get_inventory()
             if liabilities == 0:
-                raise ValueError("Current Liabilities is zero; ratio undefined.")
+                return 0.0
             return (assets - inventory) / liabilities
-        except Exception as e:
-            raise RuntimeError(f"Error Calculating Current ratio: {e}")
+        except Exception:
+            logging.exception("Error Calculating Quick ratio")
+            return None
         
